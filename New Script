@@ -1,0 +1,43 @@
+integer dialogChannel = -911;  // Channel to communicate with the dialog
+key owner;  // Owner of the object
+integer  gListener;
+// REPLACE WITH YOUR MASTODON SERVER DOMAIN
+string url = "https://example.social/api/v1/statuses";
+// LEAVE "Bearer " AND REPLACE WITH YOUR ACCESS TOKEN
+string auth = "Bearer YOUR_ACCESS_TOKEN";
+//REPLACE WITH YOUR OPENSIMULATOR NAME
+string pre_status = "Posted From YOUR_OPEN_SIMULATOR_NAME Simulator:\n";
+
+
+default
+{
+    state_entry()
+    {
+        llSay( 0, "Script running");
+        owner = llGetOwner();
+    }
+    touch_start(integer total_number)
+    {
+        if (llDetectedKey(0) == owner)
+        {
+            // Show the text input dialog box to the owner
+            gListener = llListen( dialogChannel, "", "", "");     
+            llTextBox(owner, "What would you like to post to your mastodon account", dialogChannel);
+        }
+        
+    }
+    
+    listen(integer channel, string name, key id, string message)
+    {
+        llListenRemove(gListener);
+        
+        string new_message = llEscapeURL(pre_status + message);
+        string params = "status=" + new_message;
+        string headers = "Authorization: " + auth;
+        string reqans = llHTTPRequest(url + "?" + params, [HTTP_METHOD, "POST", HTTP_MIMETYPE, "application/x-www-form-urlencoded", HTTP_CUSTOM_HEADER, "Authorization", auth], "");
+        llSay(0,reqans);        
+        
+     
+        llSay(0, "You wrote: " + message);
+    }
+}
